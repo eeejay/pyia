@@ -77,22 +77,12 @@ class _IAccessibleMixin(object):
             raise IndexError
         elif index < 0:
             index += n
-        children = (VARIANT*1)()
-        pcObtained = c_long()
-        oledll.oleacc.AccessibleChildren(
-            self, index, 1, children, byref(pcObtained))
-        child = children[0]
-        print pcObtained
-        if child.vt == VT_I4:
-            print 'VT_I4'
-            try:
-                return \
-                    self.accChild(child).QueryInterface(IAccessible)
-            except:
-                return None
-        elif child.vt == VT_DISPATCH:
-            print 'VT_DISPATCH'
-            return child.value.QueryInterface(IAccessible)
+        # TODO: Getting a child with cChildren=1 with a desktop client 
+        # container returns nothing. So we are doing this the bone headed way.
+        for i, child in enumerate(self):
+            if i == index:
+                return child
+        raise IndexError
 
     def __iter__(self):
         accChildCount = self.accChildCount
