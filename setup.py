@@ -3,6 +3,7 @@ r"""A MSAA client library.
 """
 import sys, os
 from distutils.core import setup, Command, DistutilsOptionError
+import pyia
 
 classifiers = [
     'Development Status :: 3 - Alpha',
