@@ -1,3 +1,5 @@
+# Child ID.
+CHILDID_SELF = 0
 # Accessible Roles 
 # TODO: Is there a way to retrieve this at runtime or build time?
 #
@@ -62,3 +64,13 @@ ROLE_SYSTEM_TOOLBAR = 22
 ROLE_SYSTEM_TOOLTIP = 13
 ROLE_SYSTEM_WHITESPACE = 59
 ROLE_SYSTEM_WINDOW = 9
+
+# Navigation constants
+NAVDIR_DOWN = 2
+NAVDIR_FIRSTCHILD = 7
+NAVDIR_LASTCHILD = 8
+NAVDIR_LEFT = 3
+NAVDIR_NEXT = 5
+NAVDIR_PREVIOUS = 6
+NAVDIR_RIGHT = 4
+NAVDIR_UP = 1
