@@ -111,6 +111,25 @@ class _IAccessibleMixin(object):
     def __len__(self):
         return self.accChildCount
 
+    def accStateName(self):
+        states = []
+        state = self.accState()
+        state_bit = 1
+        for shift in xrange(64):
+            state_bit = state_bit << shift
+            if state_bit & state:
+                states.append(self._getStateText(state_bit & state))
+        return ' '.join(states)
+
+    def _getStateText(self, state_bit):
+        stateLen = oledll.oleacc.GetStateTextW(state_bit,0,0)
+        if stateLen:
+            buf = create_unicode_buffer(stateLen + 2)
+            oledll.oleacc.GetStateTextW(state_bit, buf, stateLen + 1)
+            return buf.value
+        else:
+            return ''
+        
     def accRoleName(self):
         role = self.accRole()
         roleLen = oledll.oleacc.GetRoleTextW(role,0,0)
