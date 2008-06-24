@@ -6,3 +6,4 @@ del GetModule
 import accessible
 from utils import *
 from constants import *
+from registry import Registry

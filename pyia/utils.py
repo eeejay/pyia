@@ -18,4 +18,18 @@ def accessibleObjectFromWindow(hwnd):
         byref(IAccessible._iid_),byref(ptr))
     return ptr
 
+def accessibleObjectFromEvent(event):
+    if not windll.user32.IsWindow(event.hwnd):
+        return None
+    ptr = POINTER(IAccessible)()
+    varChild = VARIANT()
+    res = windll.oleacc.AccessibleObjectFromEvent(
+        event.hwnd, event.object_id, event.child_id,
+        byref(ptr), byref(varChild))
+    if res == 0:
+        print 'child', varChild.value
+        child=varChild.value
+        return ptr
+    else:
+        return None
 

@@ -1,6 +1,8 @@
 import constants
 from ctypes import CFUNCTYPE, c_int, c_voidp, windll
 from comtypes.client import PumpEvents
+from event import Event
+from utils import accessibleObjectFromEvent
 
 class Registry(object):
     def __init__(self):
@@ -12,10 +14,10 @@ class Registry(object):
 
     def _handleEvent(self, handle, eventID, window, objectID, childID, 
                      threadID, timestamp):
+        e = Event(eventID, window, objectID, childID, threadID, timestamp)
         for client, event_type in self.clients:
             if event_type == eventID:
-                client(handle, eventID, window, objectID, 
-                       childID, threadID, timestamp)
+                client(e)
             
     def registerEventListener(self, client, *event_types):
         for event_type in event_types:
@@ -50,9 +52,8 @@ class Registry(object):
 
     def start(self):
         while True:
-            PumpEvents(5)
-
-def print_event(handle, eventID, window, objectID, 
-                childID, threadID, timestamp):
-    print handle, eventID, window, objectID, childID, \
-        threadID, timestamp, constants.winEventIDsToEventNames[eventID]
+            try:
+                PumpEvents(5)
+            except KeyboardInterrupt:
+                self.clearListeners()
+                break

@@ -1,7 +1,7 @@
 import new
 import types
 from comtypes.automation import VARIANT, VT_I4, VT_DISPATCH
-from ctypes import c_long, oledll, byref
+from ctypes import c_long, oledll, byref, create_unicode_buffer
 from comtypes.gen.Accessibility import IAccessible
 
 def _mixClass(cls, new_cls, ignore=[]):
