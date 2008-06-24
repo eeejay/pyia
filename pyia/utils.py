@@ -29,7 +29,7 @@ def accessibleObjectFromEvent(event):
     if res == 0:
         print 'child', varChild.value
         child=varChild.value
-        return ptr
+        return ptr.QueryInterface(IAccessible)
     else:
         return None
 

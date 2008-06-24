@@ -3,6 +3,7 @@ import types
 from comtypes.automation import VARIANT, VT_I4, VT_DISPATCH
 from ctypes import c_long, oledll, byref, create_unicode_buffer
 from comtypes.gen.Accessibility import IAccessible
+from constants import CHILDID_SELF
 
 def _mixClass(cls, new_cls, ignore=[]):
     '''
@@ -104,8 +105,10 @@ class _IAccessibleMixin(object):
 
     def __str__(self):
         try:
-            return '[%s | %s]' % (self.accRoleName(), self.accName() or '')
+            return '[%s | %s]' % (self.accRoleName(), 
+                                  self.accName(CHILDID_SELF) or '')
         except:
+            raise
             return '[DEAD]'
 
     def __len__(self):
@@ -113,7 +116,7 @@ class _IAccessibleMixin(object):
 
     def accStateName(self):
         states = []
-        state = self.accState()
+        state = self.accState(CHILDID_SELF)
         state_bit = 1
         for shift in xrange(64):
             state_bit = state_bit << shift
@@ -131,7 +134,7 @@ class _IAccessibleMixin(object):
             return ''
         
     def accRoleName(self):
-        role = self.accRole()
+        role = self.accRole(CHILDID_SELF)
         roleLen = oledll.oleacc.GetRoleTextW(role,0,0)
         if roleLen:
             buf = create_unicode_buffer(roleLen + 2)
