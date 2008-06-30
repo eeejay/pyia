@@ -33,3 +33,118 @@ def accessibleObjectFromEvent(event):
     else:
         return None
 
+
+def findDescendant(acc, pred, breadth_first=False):
+    '''
+    Searches for a descendant node satisfying the given predicate starting at 
+    this node. The search is performed in depth-first order by default or
+    in breadth first order if breadth_first is True. For example,
+    
+    my_win = findDescendant(lambda x: x.name == 'My Window')
+    
+    will search all descendants of x until one is located with the name 'My
+    Window' or all nodes are exausted. Calls L{_findDescendantDepth} or
+    L{_findDescendantBreadth} to start the recursive search.
+    
+    @param acc: Root accessible of the search
+    @type acc: Accessibility.Accessible
+    @param pred: Search predicate returning True if accessible matches the 
+    search criteria or False otherwise
+    @type pred: callable
+    @param breadth_first: Search breadth first (True) or depth first (False)?
+    @type breadth_first: boolean
+    @return: Accessible matching the criteria or None if not found
+    @rtype: Accessibility.Accessible or None
+    '''
+    if breadth_first:
+        return _findDescendantBreadth(acc, pred)
+    
+    for child in acc:
+        try:
+            ret = _findDescendantDepth(acc, pred)
+        except Exception:
+            ret = None
+        if ret is not None: return ret
+
+def _findDescendantBreadth(acc, pred):
+    '''    
+    Internal function for locating one descendant. Called by L{findDescendant} to
+    start the search.
+  
+    @param acc: Root accessible of the search
+    @type acc: Accessibility.Accessible
+    @param pred: Search predicate returning True if accessible matches the 
+    search criteria or False otherwise
+    @type pred: callable
+    @return: Matching node or None to keep searching
+    @rtype: Accessibility.Accessible or None
+    '''
+    for child in acc:
+        try:
+            if pred(child): return child
+        except Exception:
+            pass
+    for child in acc:
+        try:
+            ret = _findDescendantBreadth(child, pred)
+        except Exception:
+            ret = None
+        if ret is not None: return ret
+
+def _findDescendantDepth(acc, pred):
+    '''
+    Internal function for locating one descendant. Called by L{findDescendant} to
+    start the search.
+    
+    @param acc: Root accessible of the search
+    @type acc: Accessibility.Accessible
+    @param pred: Search predicate returning True if accessible matches the 
+    search criteria or False otherwise
+    @type pred: callable
+    @return: Matching node or None to keep searching
+    @rtype: Accessibility.Accessible or None
+    '''
+    try:
+        if pred(acc): return acc
+    except Exception:
+        pass
+    for child in acc:
+        try:
+            ret = _findDescendantDepth(child, pred)
+        except Exception:
+            ret = None
+        if ret is not None: return ret
+    
+def findAllDescendants(acc, pred):
+  '''
+  Searches for all descendant nodes satisfying the given predicate starting at 
+  this node. Does an in-order traversal. For example,
+  
+  pred = lambda x: x.getRole() == pyatspi.ROLE_PUSH_BUTTON
+  buttons = pyatspi.findAllDescendants(node, pred)
+  
+  will locate all push button descendants of node.
+  
+  @param acc: Root accessible of the search
+  @type acc: Accessibility.Accessible
+  @param pred: Search predicate returning True if accessible matches the 
+      search criteria or False otherwise
+  @type pred: callable
+  @return: All nodes matching the search criteria
+  @rtype: list
+  '''
+  matches = []
+  _findAllDescendants(acc, pred, matches)
+  return matches
+
+def _findAllDescendants(acc, pred, matches):
+  '''
+  Internal method for collecting all descendants. Reuses the same matches
+  list so a new one does not need to be built on each recursive step.
+  '''
+  for child in acc:
+    try:
+      if pred(child): matches.append(child)
+    except Exception:
+      pass
+    _findAllDescendants(child, pred, matches)

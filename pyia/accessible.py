@@ -3,7 +3,64 @@ import types
 from comtypes.automation import VARIANT, VT_I4, VT_DISPATCH
 from ctypes import c_long, oledll, byref, create_unicode_buffer
 from comtypes.gen.Accessibility import IAccessible
+from comtypes import named_property, COMError, hresult
 from constants import CHILDID_SELF
+
+def _makeExceptionHandler(func):
+    '''
+    Builds a function calling the one it wraps in try/except statements catching
+    COMError exceptions.
+  
+    @return: Function calling the method being wrapped
+    @rtype: function
+    '''
+    def _inner(self, *args, **kwargs):
+        try:
+            return func(self, *args, **kwargs)
+        except COMError, e:
+            # TODO: Translate COMErrors to more pythonic equivalents.
+            raise
+    return _inner
+
+def _mixExceptions(cls):
+    '''
+    Wraps all methods and properties in a class with handlers for CORBA 
+    exceptions.
+    
+    @param cls: Class to mix interface methods into
+    @type cls: class
+    '''
+    # get a method type as a reference from a known method
+    # loop over all names in the new class
+    for name in cls.__dict__.keys():
+        obj = cls.__dict__[name]
+        # check if we're on a protected or private method
+        if name.startswith('_'):
+            continue
+        # check if we're on a method
+        elif isinstance(obj, new.instancemethod):
+            # wrap the function in an exception handler
+            method = _makeExceptionHandler(obj)
+            # add the wrapped function to the class
+            setattr(cls, name, method)
+        elif isinstance(obj, named_property):
+            # wrap the function in an exception handler
+            if obj.getter is not None:
+                obj.getter = _makeExceptionHandler(obj.getter)
+            if obj.setter is not None:
+                obj.setter = _makeExceptionHandler(obj.setter)
+        # check if we're on a property
+        elif isinstance(obj, property):
+            # wrap the getters and setters
+            if obj.fget and obj.fget.__name__ != '_inner':
+                getter = _makeExceptionHandler(obj.fget)
+            else:
+                getter = None
+            if obj.fset and obj.fset.__name__ != '_inner':
+                setter = _makeExceptionHandler(obj.fset)
+            else:
+                setter = None
+            setattr(cls, name, property(getter, setter))
 
 def _mixClass(cls, new_cls, ignore=[]):
     '''
@@ -71,6 +128,7 @@ def _mixClass(cls, new_cls, ignore=[]):
                 setattr(cls, '_mix_'+name, old_prop)
             setattr(cls, name, func)
 
+
 class _IAccessibleMixin(object):
     def __getitem__(self, index):
         n = self.accChildCount
@@ -78,12 +136,25 @@ class _IAccessibleMixin(object):
             raise IndexError
         elif index < 0:
             index += n
-        # TODO: Getting a child with cChildren=1 with a desktop client 
-        # container returns nothing. So we are doing this the bone headed way.
-        for i, child in enumerate(self):
-            if i == index:
-                return child
+        children = (VARIANT*1)()
+        pcObtained = c_long()
+        oledll.oleacc.AccessibleChildren(
+            self, index, 1, children, byref(pcObtained))
+        child = children[0]
+        if child.vt == VT_I4:
+            try:
+                return \
+                    self.accChild(child).QueryInterface(IAccessible)
+            except:
+                raise IndexError
+        elif child.vt == VT_DISPATCH:
+            return child.value.QueryInterface(IAccessible)
+        else:
+            for i, item in enumerate(self):
+                if i == index:
+                    return item
         raise IndexError
+
 
     def __iter__(self):
         accChildCount = self.accChildCount
@@ -143,4 +214,5 @@ class _IAccessibleMixin(object):
         else:
             return ''
 
+_mixExceptions(IAccessible)
 _mixClass(IAccessible, _IAccessibleMixin)
