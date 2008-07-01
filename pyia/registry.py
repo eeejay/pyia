@@ -39,6 +39,9 @@ class Registry(object):
                 c_voidp,c_int,c_int,c_int,c_int,c_int,c_int,c_int)(
                     self._handleEvent)
 
+    def __call__(self):
+        return self
+
     def _handleEvent(self, handle, eventID, window, objectID, childID, 
                      threadID, timestamp):
         e = Event(eventID, window, objectID, childID, threadID, timestamp)

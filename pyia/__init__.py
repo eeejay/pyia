@@ -32,4 +32,9 @@ del GetModule
 import accessible
 from utils import *
 from constants import *
-from registry import Registry
+import registry
+
+# Create singleton registry.
+Registry = registry.Registry()
+registry.Registry = Registry
+del registry
