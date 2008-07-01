@@ -53,7 +53,6 @@ def accessibleObjectFromEvent(event):
         event.hwnd, event.object_id, event.child_id,
         byref(ptr), byref(varChild))
     if res == 0:
-        print 'child', varChild.value
         child=varChild.value
         return ptr.QueryInterface(IAccessible)
     else:
