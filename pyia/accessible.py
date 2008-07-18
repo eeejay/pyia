@@ -203,11 +203,11 @@ class _IAccessibleMixin(object):
 
     def __str__(self):
         try:
-            return '[%s | %s]' % (self.accRoleName(), 
-                                  self.accName(CHILDID_SELF) or '')
+            return u'[%s | %s]' % (self.accRoleName(), 
+                                   self.accName(CHILDID_SELF) or '')
         except:
             raise
-            return '[DEAD]'
+            return u'[DEAD]'
 
     def __len__(self):
         return self.accChildCount
@@ -215,9 +215,8 @@ class _IAccessibleMixin(object):
     def accStateName(self):
         states = []
         state = self.accState(CHILDID_SELF)
-        state_bit = 1
         for shift in xrange(64):
-            state_bit = state_bit << shift
+            state_bit = 1 << shift
             if state_bit & state:
                 states.append(self._getStateText(state_bit & state))
         return ' '.join(states)

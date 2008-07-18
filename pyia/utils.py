@@ -30,116 +30,120 @@ from comtypes.automation import VARIANT
 from comtypes.gen.Accessibility import IAccessible
 
 def getDesktop():
-    desktop_hwnd = windll.user32.GetDesktopWindow()
-    desktop_window = accessibleObjectFromWindow(desktop_hwnd)
-    for child in desktop_window:
-        if child.accRole() == constants.ROLE_SYSTEM_CLIENT:
-            return child
-    return None
+  desktop_hwnd = windll.user32.GetDesktopWindow()
+  desktop_window = accessibleObjectFromWindow(desktop_hwnd)
+  for child in desktop_window:
+    if child.accRole() == constants.ROLE_SYSTEM_CLIENT:
+      return child
+  return None
+
+def getForegroundWindow():
+  return accessibleObjectFromWindow(
+    windll.user32.GetForegroundWindow())
 
 def accessibleObjectFromWindow(hwnd):
-    ptr = POINTER(IAccessible)()
-    res = oledll.oleacc.AccessibleObjectFromWindow(
-        hwnd,0,
-        byref(IAccessible._iid_),byref(ptr))
-    return ptr
+  ptr = POINTER(IAccessible)()
+  res = oledll.oleacc.AccessibleObjectFromWindow(
+    hwnd,0,
+    byref(IAccessible._iid_),byref(ptr))
+  return ptr
 
 def accessibleObjectFromEvent(event):
-    if not windll.user32.IsWindow(event.hwnd):
-        return None
-    ptr = POINTER(IAccessible)()
-    varChild = VARIANT()
-    res = windll.oleacc.AccessibleObjectFromEvent(
-        event.hwnd, event.object_id, event.child_id,
-        byref(ptr), byref(varChild))
-    if res == 0:
-        child=varChild.value
-        return ptr.QueryInterface(IAccessible)
-    else:
-        return None
+  if not windll.user32.IsWindow(event.hwnd):
+    return None
+  ptr = POINTER(IAccessible)()
+  varChild = VARIANT()
+  res = windll.oleacc.AccessibleObjectFromEvent(
+    event.hwnd, event.object_id, event.child_id,
+    byref(ptr), byref(varChild))
+  if res == 0:
+    child=varChild.value
+    return ptr.QueryInterface(IAccessible)
+  else:
+    return None
 
 
 def findDescendant(acc, pred, breadth_first=False):
-    '''
-    Searches for a descendant node satisfying the given predicate starting at 
-    this node. The search is performed in depth-first order by default or
-    in breadth first order if breadth_first is True. For example,
-    
-    my_win = findDescendant(lambda x: x.name == 'My Window')
-    
-    will search all descendants of x until one is located with the name 'My
-    Window' or all nodes are exausted. Calls L{_findDescendantDepth} or
-    L{_findDescendantBreadth} to start the recursive search.
-    
-    @param acc: Root accessible of the search
-    @type acc: Accessibility.Accessible
-    @param pred: Search predicate returning True if accessible matches the 
-    search criteria or False otherwise
-    @type pred: callable
-    @param breadth_first: Search breadth first (True) or depth first (False)?
-    @type breadth_first: boolean
-    @return: Accessible matching the criteria or None if not found
-    @rtype: Accessibility.Accessible or None
-    '''
-    if breadth_first:
-        return _findDescendantBreadth(acc, pred)
-    
-    for child in acc:
-        try:
-            ret = _findDescendantDepth(acc, pred)
-        except Exception:
-            ret = None
-        if ret is not None: return ret
+  '''
+  Searches for a descendant node satisfying the given predicate starting at 
+  this node. The search is performed in depth-first order by default or
+  in breadth first order if breadth_first is True. For example,
+  
+  my_win = findDescendant(lambda x: x.name == 'My Window')
+  
+  will search all descendants of x until one is located with the name 'My
+  Window' or all nodes are exausted. Calls L{_findDescendantDepth} or
+  L{_findDescendantBreadth} to start the recursive search.
+  
+  @param acc: Root accessible of the search
+  @type acc: Accessibility.Accessible
+  @param pred: Search predicate returning True if accessible matches the 
+  search criteria or False otherwise
+  @type pred: callable
+  @param breadth_first: Search breadth first (True) or depth first (False)?
+  @type breadth_first: boolean
+  @return: Accessible matching the criteria or None if not found
+  @rtype: Accessibility.Accessible or None
+  '''
+  if breadth_first:
+    return _findDescendantBreadth(acc, pred)
+  
+  for child in acc:
+    try:
+      ret = _findDescendantDepth(acc, pred)
+    except Exception:
+      ret = None
+    if ret is not None: return ret
 
 def _findDescendantBreadth(acc, pred):
-    '''    
-    Internal function for locating one descendant. Called by L{findDescendant} to
-    start the search.
-  
-    @param acc: Root accessible of the search
-    @type acc: Accessibility.Accessible
-    @param pred: Search predicate returning True if accessible matches the 
-    search criteria or False otherwise
-    @type pred: callable
-    @return: Matching node or None to keep searching
-    @rtype: Accessibility.Accessible or None
-    '''
-    for child in acc:
-        try:
-            if pred(child): return child
-        except Exception:
-            pass
-    for child in acc:
-        try:
-            ret = _findDescendantBreadth(child, pred)
-        except Exception:
-            ret = None
-        if ret is not None: return ret
+  '''  
+  Internal function for locating one descendant. Called by L{findDescendant} to
+  start the search.
+ 
+  @param acc: Root accessible of the search
+  @type acc: Accessibility.Accessible
+  @param pred: Search predicate returning True if accessible matches the 
+  search criteria or False otherwise
+  @type pred: callable
+  @return: Matching node or None to keep searching
+  @rtype: Accessibility.Accessible or None
+  '''
+  for child in acc:
+    try:
+      if pred(child): return child
+    except Exception:
+      pass
+  for child in acc:
+    try:
+      ret = _findDescendantBreadth(child, pred)
+    except Exception:
+      ret = None
+    if ret is not None: return ret
 
 def _findDescendantDepth(acc, pred):
-    '''
-    Internal function for locating one descendant. Called by L{findDescendant} to
-    start the search.
-    
-    @param acc: Root accessible of the search
-    @type acc: Accessibility.Accessible
-    @param pred: Search predicate returning True if accessible matches the 
-    search criteria or False otherwise
-    @type pred: callable
-    @return: Matching node or None to keep searching
-    @rtype: Accessibility.Accessible or None
-    '''
+  '''
+  Internal function for locating one descendant. Called by L{findDescendant} to
+  start the search.
+  
+  @param acc: Root accessible of the search
+  @type acc: Accessibility.Accessible
+  @param pred: Search predicate returning True if accessible matches the 
+  search criteria or False otherwise
+  @type pred: callable
+  @return: Matching node or None to keep searching
+  @rtype: Accessibility.Accessible or None
+  '''
+  try:
+    if pred(acc): return acc
+  except Exception:
+    pass
+  for child in acc:
     try:
-        if pred(acc): return acc
+      ret = _findDescendantDepth(child, pred)
     except Exception:
-        pass
-    for child in acc:
-        try:
-            ret = _findDescendantDepth(child, pred)
-        except Exception:
-            ret = None
-        if ret is not None: return ret
-    
+      ret = None
+    if ret is not None: return ret
+   
 def findAllDescendants(acc, pred):
   '''
   Searches for all descendant nodes satisfying the given predicate starting at 
@@ -173,3 +177,11 @@ def _findAllDescendants(acc, pred, matches):
     except Exception:
       pass
     _findAllDescendants(child, pred, matches)
+
+def printSubtree(acc, indent=0):
+  print '%s%s' % (indent*' ', unicode(acc).encode('cp1252', 'ignore'))
+  for child in acc:
+    try:
+      printSubtree(child, indent+1)
+    except:
+      pass
