@@ -44,8 +44,8 @@ class Event(object):
 \twindow: %s
 \tthread: %s
 \ttstamp: %s''' % \
-            (winEventIDsToEventNames[self.type], self.source, self.hwnd, 
-             self.thread_id, self.timestamp)
+            (winEventIDsToEventNames.get(self.type, self.type), 
+             self.source, self.hwnd, self.thread_id, self.timestamp)
 
     def _get_source(self):
         try:

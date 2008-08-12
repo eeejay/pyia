@@ -212,14 +212,14 @@ class _IAccessibleMixin(object):
     def __len__(self):
         return self.accChildCount
 
-    def accStateName(self):
+    def accStateSet(self):
         states = []
         state = self.accState(CHILDID_SELF)
         for shift in xrange(64):
             state_bit = 1 << shift
             if state_bit & state:
                 states.append(self._getStateText(state_bit & state))
-        return ' '.join(states)
+        return states
 
     def _getStateText(self, state_bit):
         stateLen = oledll.oleacc.GetStateTextW(state_bit,0,0)
@@ -232,6 +232,9 @@ class _IAccessibleMixin(object):
         
     def accRoleName(self):
         role = self.accRole(CHILDID_SELF)
+        if not isinstance(role, int):
+            # Maybe one of those Mozilla string roles, just return it.
+            return role
         roleLen = oledll.oleacc.GetRoleTextW(role,0,0)
         if roleLen:
             buf = create_unicode_buffer(roleLen + 2)

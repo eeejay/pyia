@@ -1,8 +1,14 @@
+2008-08-11  Eitan Isaacson  <eitan@ascender.com>
+
+	* pyia/event.py: All sorts of crap!
+
 2008-07-18  Eitan Isaacson  <eitan@ascender.com>
 
 	* pyia/accessible.py: 
 	Fixed state names method. 
 	Make  __str__ explicityle unicode (for readability).
+	Fixed special role names.
+
 	* pyia/utils.py: 
 	Added getForegroundWindow().
 

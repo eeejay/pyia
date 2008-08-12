@@ -60,7 +60,7 @@ class Registry(object):
                 self.clients[(client, event_type)] = hook_id
             else:
                 print "Could not register callback for %s" % \
-                    constants.winEventIDsToEventNames(event_type)
+                    constants.winEventIDsToEventNames.get(event_type, event_type)
 
     def deregisterEventListener(self, client, *event_types):
         for event_type in event_types:
@@ -80,10 +80,14 @@ class Registry(object):
             else:
                 windll.user32.UnhookWinEvent(hook_id)
 
+
+    def iter_loop(self, timeout=1):
+        PumpEvents(timeout)
+        
     def start(self):
         while True:
             try:
-                PumpEvents(5)
+                self.iter_loop(5)
             except KeyboardInterrupt:
                 self.clearListeners()
                 break

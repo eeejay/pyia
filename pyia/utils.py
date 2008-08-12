@@ -25,7 +25,7 @@ Boston, MA 02111-1307, USA.
 '''
 
 import constants
-from ctypes import windll, oledll, POINTER, byref
+from ctypes import windll, oledll, POINTER, byref, c_int
 from comtypes.automation import VARIANT
 from comtypes.gen.Accessibility import IAccessible
 
@@ -185,3 +185,23 @@ def printSubtree(acc, indent=0):
       printSubtree(child, indent+1)
     except:
       pass
+
+def windowFromAccessibleObject(acc):
+  hwnd = c_int()
+  try:
+    res = windll.oleacc.WindowFromAccessibleObject(acc, byref(hwnd))
+  except:
+    res = 0
+  if res == 0:
+    return hwnd.value
+  else:
+    return 0
+
+def getWindowThreadProcessID(hwnd):
+  processID = c_int()
+  threadID = windll.user32.GetWindowThreadProcessId(hwnd,byref(processID))
+  return (processID.value, threadID)
+
+def getAccessibleThreadProcessID(acc):
+  hwnd = windowFromAccessibleObject(acc)
+  return getWindowThreadProcessID(hwnd)
