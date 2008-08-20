@@ -45,7 +45,7 @@ class Registry(object):
     def _handleEvent(self, handle, eventID, window, objectID, childID, 
                      threadID, timestamp):
         e = Event(eventID, window, objectID, childID, threadID, timestamp)
-        for client, event_type in self.clients:
+        for client, event_type in self.clients.keys():
             if event_type == eventID:
                 client(e)
             
@@ -55,7 +55,8 @@ class Registry(object):
                 continue
             hook_id = \
                 windll.user32.SetWinEventHook(
-                    event_type, event_type, 0, self._c_handleEvent, 0, 0, 0)
+                    event_type, event_type, 0, self._c_handleEvent, 0, 0, 
+                    constants.WINEVENT_OUTOFCONTEXT)
             if hook_id:
                 self.clients[(client, event_type)] = hook_id
             else:
