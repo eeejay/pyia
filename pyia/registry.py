@@ -26,6 +26,7 @@ Boston, MA 02111-1307, USA.
 '''
 
 import constants
+import traceback
 from ctypes import CFUNCTYPE, c_int, c_voidp, windll
 from comtypes.client import PumpEvents
 from event import Event
@@ -47,7 +48,10 @@ class Registry(object):
         e = Event(eventID, window, objectID, childID, threadID, timestamp)
         for client, event_type in self.clients.keys():
             if event_type == eventID:
-                client(e)
+                try:
+                    client(e)
+                except Exception:
+                    traceback.print_exc()
             
     def registerEventListener(self, client, *event_types):
         for event_type in event_types:
