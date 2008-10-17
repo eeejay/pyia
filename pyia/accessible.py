@@ -188,9 +188,13 @@ class _IAccessibleMixin(object):
         VariantArrayType = VARIANT * accChildCount
         rgvarChildren = VariantArrayType()
         pcObtained = c_long()
-        oledll.oleacc.AccessibleChildren(self, 0, accChildCount, rgvarChildren,
-                                  byref(pcObtained))
-        for child in rgvarChildren:
+        try:
+            oledll.oleacc.AccessibleChildren(self, 0, accChildCount, 
+                                             rgvarChildren, byref(pcObtained))
+        except:
+            pcObtained = c_long(0)
+        for i in xrange(pcObtained.value):
+            child = rgvarChildren[i]
             if child.vt == VT_I4:
                 try:
                     ppdispChild = ia.accChild(child)
