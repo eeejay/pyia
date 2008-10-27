@@ -178,6 +178,25 @@ def _findAllDescendants(acc, pred, matches):
       pass
     _findAllDescendants(child, pred, matches)
 
+def findAncestor(acc, pred):
+    if acc is None:
+        # guard against bad start condition
+        return None
+    while 1:
+        try:
+            parent = acc.accParent.QueryInterface(IAccessible)
+        except:
+            parent = None
+        if parent is None:
+            # stop if there is no parent and we haven't returned yet
+            return None
+        try:
+            if pred(parent): return parent
+        except Exception:
+            pass
+        # move to the parent
+        acc = parent
+
 def printSubtree(acc, indent=0):
   print '%s%s' % (indent*' ', unicode(acc).encode('cp1252', 'ignore'))
   for child in acc:
