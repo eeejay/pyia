@@ -163,25 +163,10 @@ class _IAccessibleMixin(object):
             raise IndexError
         elif index < 0:
             index += n
-        children = (VARIANT*1)()
-        pcObtained = c_long()
-        oledll.oleacc.AccessibleChildren(
-            self, index, 1, children, byref(pcObtained))
-        child = children[0]
-        if child.vt == VT_I4:
-            try:
-                return \
-                    self.accChild(child).QueryInterface(IAccessible)
-            except:
-                raise IndexError
-        elif child.vt == VT_DISPATCH:
-            return child.value.QueryInterface(IAccessible)
-        else:
-            for i, item in enumerate(self):
-                if i == index:
-                    return item
+        for i, c in enumerate(self):
+            if i == index:
+                return c
         raise IndexError
-
 
     def __iter__(self):
         accChildCount = self.accChildCount
@@ -196,12 +181,7 @@ class _IAccessibleMixin(object):
         for i in xrange(pcObtained.value):
             child = rgvarChildren[i]
             if child.vt == VT_I4:
-                try:
-                    ppdispChild = ia.accChild(child)
-                    if ppdispChild:
-                        yield ppdispChild.QueryInterface(IAccessible)
-                except:
-                    pass
+                yield ManagedChildAccessible(self, child.value)
             elif child.vt == VT_DISPATCH:
                 yield child.value.QueryInterface(IAccessible)
 
@@ -216,9 +196,9 @@ class _IAccessibleMixin(object):
     def __len__(self):
         return self.accChildCount
 
-    def accStateSet(self):
+    def accStateSet(self, child_id=CHILDID_SELF):
         states = []
-        state = self.accState(CHILDID_SELF)
+        state = self.accState(child_id)
         for shift in xrange(64):
             state_bit = 1 << shift
             if state_bit & state:
@@ -234,8 +214,8 @@ class _IAccessibleMixin(object):
         else:
             return ''
         
-    def accRoleName(self):
-        role = self.accRole(CHILDID_SELF)
+    def accRoleName(self, child_id=CHILDID_SELF):
+        role = self.accRole(child_id)
         if not isinstance(role, int):
             # Maybe one of those Mozilla string roles, just return it.
             return role
@@ -246,6 +226,51 @@ class _IAccessibleMixin(object):
             return buf.value
         else:
             return ''
+
+class _ChildMethodWrapper(object):
+    def __init__(self, meth, child_id):
+        self.child_id = child_id
+        self.meth = meth
+    def __call__(self, *args, **kwargs):
+#        print 'should call', self.meth, 'with', self.child_id
+        return self.meth(self.child_id)
+
+class ManagedChildAccessible(object):
+    _managed_funcs = [
+        'accDefaultAction', 'accDescription', 'accDoDefaultAction', 
+        'accFocus', 'accHelp', 'accHelpTopic', 'accKeyboardShortcut', 
+        'accLocation', 'accName', 'accNavigate', 'accParent', 
+        'accRole', 'accRoleName', 'accSelect', 'accState', 
+        'accStateSet', 'accValue']
+
+    def __init__(self, parent, child_id):
+        self.parent = parent
+        self.child_id = child_id
+
+    def __getattr__(self, name):
+        if name in self._managed_funcs:
+            return _ChildMethodWrapper(
+                getattr(self.parent, name), self.child_id)
+        raise AttributeError
+
+    def __nonzero__(self):
+        return True
+    
+    def __str__(self):
+        try:
+            return u'[%s | %s]' % (self.accRoleName(), 
+                                   self.accName() or '')
+        except:
+            return u'[DEAD]'
+
+    def __len__(self):
+        return 0
+
+    def __iter__(self):
+        return iter([])
+
+    def __getitem__(self, index):
+        raise IndexError
 
 _mixExceptions(IAccessible)
 _mixClass(IAccessible, _IAccessibleMixin)
