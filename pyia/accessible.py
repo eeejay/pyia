@@ -31,7 +31,7 @@ from comtypes.automation import VARIANT, VT_I4, VT_DISPATCH
 from ctypes import c_long, oledll, byref, create_unicode_buffer
 from comtypes.gen.Accessibility import IAccessible
 from comtypes import named_property, COMError, hresult
-from constants import CHILDID_SELF
+from constants import CHILDID_SELF, UNLOCALIZED_ROLE_NAMES
 
 def _makeExceptionHandler(func):
     '''
@@ -215,6 +215,13 @@ class _IAccessibleMixin(object):
             return ''
         
     def accRoleName(self, child_id=CHILDID_SELF):
+        role = self.accRole(child_id)
+        if not isinstance(role, int):
+            # Maybe one of those Mozilla string roles, just return it.
+            return role
+        return UNLOCALIZED_ROLE_NAMES.get(role, 'unknown')
+
+    def accLocalizedRoleName(self, child_id=CHILDID_SELF):
         role = self.accRole(child_id)
         if not isinstance(role, int):
             # Maybe one of those Mozilla string roles, just return it.
