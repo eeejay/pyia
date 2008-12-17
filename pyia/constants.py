@@ -199,6 +199,40 @@ STATE_SYSTEM_PROTECTED = 0x20000000
 STATE_SYSTEM_HASPOPUP = 0x40000000
 STATE_SYSTEM_VALID = 0x1fffffff
 
+# Unlocalized state strings
+UNLOCALIZED_STATE_NAMES = {
+    1:          u'unavailable',
+    2:          u'selected',
+    4:          u'focused',
+    8:          u'pressed',
+    16:         u'checked',
+    32:         u'mixed',
+    64:         u'read only',
+    128:        u'hot tracked',
+    256:        u'default',
+    512:        u'expanded',
+    1024:       u'collapsed',
+    2048:       u'busy',
+    4096:       u'floating',
+    8192:       u'marqueed',
+    16384:      u'animated',
+    32768:      u'invisible',
+    65536:      u'offscreen',
+    131072:     u'sizeable',
+    262144:     u'moveable',
+    524288:     u'self voicing',
+    1048576:    u'focusable',
+    2097152:    u'selectable',
+    4194304:    u'linked',
+    8388608:    u'traversed',
+    16777216:   u'multiple selectable',
+    33554432:   u'extended selectable',
+    67108864:   u'alert low',
+    134217728:  u'alert medium',
+    268435456:  u'alert high',
+    536870912:  u'protected',
+    1073741824: u'has popup'}
+
 # SetWinEventHook() flags
 WINEVENT_OUTOFCONTEXT = 0x0
 WINEVENT_SKIPOWNTHREAD =0x1

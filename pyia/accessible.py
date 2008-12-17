@@ -31,7 +31,9 @@ from comtypes.automation import VARIANT, VT_I4, VT_DISPATCH
 from ctypes import c_long, oledll, byref, create_unicode_buffer
 from comtypes.gen.Accessibility import IAccessible
 from comtypes import named_property, COMError, hresult
-from constants import CHILDID_SELF, UNLOCALIZED_ROLE_NAMES
+from constants import CHILDID_SELF, \
+    UNLOCALIZED_ROLE_NAMES, \
+    UNLOCALIZED_STATE_NAMES
 
 def _makeExceptionHandler(func):
     '''
@@ -197,6 +199,17 @@ class _IAccessibleMixin(object):
         return self.accChildCount
 
     def accStateSet(self, child_id=CHILDID_SELF):
+        states = []
+        state = self.accState(child_id)
+        for shift in xrange(64):
+            state_bit = 1 << shift
+            if state_bit & state:
+                states.append(
+                    UNLOCALIZED_STATE_NAMES.get(
+                        (state_bit & state), 'unknown'))
+        return states
+
+    def accLocalizedStateSet(self, child_id=CHILDID_SELF):
         states = []
         state = self.accState(child_id)
         for shift in xrange(64):
