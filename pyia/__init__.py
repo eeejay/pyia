@@ -24,7 +24,7 @@ Free Software Foundation, Inc., 59 Temple Place - Suite 330,
 Boston, MA 02111-1307, USA.
 '''
 
-__version__ = "0.0.1"
+__version__ = "0.0.2"
 from comtypes.client import GetModule
 GetModule('oleacc.dll')
 from comtypes.gen.Accessibility import IAccessible
