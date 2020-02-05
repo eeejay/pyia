@@ -24,7 +24,7 @@ Free Software Foundation, Inc., 59 Temple Place - Suite 330,
 Boston, MA 02111-1307, USA.
 '''
 
-import constants
+from . import constants
 from ctypes import windll, oledll, POINTER, byref, c_int
 from comtypes.automation import VARIANT
 from comtypes.gen.Accessibility import IAccessible
@@ -198,7 +198,7 @@ def findAncestor(acc, pred):
         acc = parent
 
 def printSubtree(acc, indent=0):
-  print '%s%s' % (indent*' ', unicode(acc).encode('cp1252', 'ignore'))
+  print('%s%s' % (indent*' ', str(acc).encode('cp1252', 'ignore')))
   for child in acc:
     try:
       printSubtree(child, indent+1)

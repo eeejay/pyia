@@ -25,12 +25,12 @@ Free Software Foundation, Inc., 59 Temple Place - Suite 330,
 Boston, MA 02111-1307, USA.
 '''
 
-import constants
+from . import constants
 import traceback
 from ctypes import CFUNCTYPE, c_int, c_voidp, windll
 from comtypes.client import PumpEvents
-from event import Event
-from utils import accessibleObjectFromEvent
+from .event import Event
+from .utils import accessibleObjectFromEvent
 
 class Registry(object):
     def __init__(self):
@@ -46,7 +46,7 @@ class Registry(object):
     def _handleEvent(self, handle, eventID, window, objectID, childID, 
                      threadID, timestamp):
         e = Event(eventID, window, objectID, childID, threadID, timestamp)
-        for client, event_type in self.clients.keys():
+        for client, event_type in list(self.clients.keys()):
             if event_type == eventID:
                 try:
                     client(e)
@@ -55,7 +55,7 @@ class Registry(object):
             
     def registerEventListener(self, client, *event_types):
         for event_type in event_types:
-            if self.clients.has_key((client, event_type)):
+            if (client, event_type) in self.clients:
                 continue
             hook_id = \
                 windll.user32.SetWinEventHook(
@@ -64,8 +64,8 @@ class Registry(object):
             if hook_id:
                 self.clients[(client, event_type)] = hook_id
             else:
-                print "Could not register callback for %s" % \
-                    constants.winEventIDsToEventNames.get(event_type, event_type)
+                print("Could not register callback for %s" % \
+                    constants.winEventIDsToEventNames.get(event_type, event_type))
 
     def deregisterEventListener(self, client, *event_types):
         for event_type in event_types:
