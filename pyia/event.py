@@ -24,8 +24,8 @@ Free Software Foundation, Inc., 59 Temple Place - Suite 330,
 Boston, MA 02111-1307, USA.
 '''
 
-from constants import winEventIDsToEventNames
-from utils import accessibleObjectFromEvent
+from .constants import winEventIDsToEventNames
+from .utils import accessibleObjectFromEvent
 
 class Event(object):
     def __init__(self, 

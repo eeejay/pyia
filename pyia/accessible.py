@@ -25,13 +25,12 @@ Free Software Foundation, Inc., 59 Temple Place - Suite 330,
 Boston, MA 02111-1307, USA.
 '''
 
-import new
 import types
 from comtypes.automation import VARIANT, VT_I4, VT_DISPATCH
 from ctypes import c_long, oledll, byref, create_unicode_buffer
 from comtypes.gen.Accessibility import IAccessible
 from comtypes import named_property, COMError, hresult
-from constants import CHILDID_SELF, \
+from .constants import CHILDID_SELF, \
     UNLOCALIZED_ROLE_NAMES, \
     UNLOCALIZED_STATE_NAMES
 
@@ -46,7 +45,7 @@ def _makeExceptionHandler(func):
     def _inner(self, *args, **kwargs):
         try:
             return func(self, *args, **kwargs)
-        except COMError, e:
+        except COMError as e:
             # TODO: Translate COMErrors to more pythonic equivalents.
             raise
     return _inner
@@ -61,13 +60,13 @@ def _mixExceptions(cls):
     '''
     # get a method type as a reference from a known method
     # loop over all names in the new class
-    for name in cls.__dict__.keys():
+    for name in list(cls.__dict__.keys()):
         obj = cls.__dict__[name]
         # check if we're on a protected or private method
         if name.startswith('_'):
             continue
         # check if we're on a method
-        elif isinstance(obj, new.instancemethod):
+        elif isinstance(obj, types.MethodType):
             # wrap the function in an exception handler
             method = _makeExceptionHandler(obj)
             # add the wrapped function to the class
@@ -110,13 +109,13 @@ def _mixClass(cls, new_cls, ignore=[]):
     @type ignore: iterable
     '''
     # loop over all names in the new class
-    for name, func in new_cls.__dict__.items():
+    for name, func in list(new_cls.__dict__.items()):
         if name in ignore:
             continue
         if isinstance(func, types.FunctionType):
             # build a new function that is a clone of the one from new_cls
-            method = new.function(func.func_code, func.func_globals, name, 
-                                  func.func_defaults, func.func_closure)
+            method = types.FunctionType(func.__code__, func.__globals__, name, 
+                                  func.__defaults__, func.__closure__)
             try:
                 # check if a method of the same name already exists in the 
                 # target
@@ -180,7 +179,7 @@ class _IAccessibleMixin(object):
                                              rgvarChildren, byref(pcObtained))
         except:
             pcObtained = c_long(0)
-        for i in xrange(pcObtained.value):
+        for i in range(pcObtained.value):
             child = rgvarChildren[i]
             if child.vt == VT_I4:
                 yield ManagedChildAccessible(self, child.value)
@@ -189,11 +188,11 @@ class _IAccessibleMixin(object):
 
     def __str__(self):
         try:
-            return u'[%s | %s]' % (self.accRoleName(), 
+            return '[%s | %s]' % (self.accRoleName(), 
                                    self.accName(CHILDID_SELF) or '')
         except:
             raise
-            return u'[DEAD]'
+            return '[DEAD]'
 
     def __len__(self):
         return self.accChildCount
@@ -201,7 +200,7 @@ class _IAccessibleMixin(object):
     def accStateSet(self, child_id=CHILDID_SELF):
         states = []
         state = self.accState(child_id)
-        for shift in xrange(64):
+        for shift in range(64):
             state_bit = 1 << shift
             if state_bit & state:
                 states.append(
@@ -212,7 +211,7 @@ class _IAccessibleMixin(object):
     def accLocalizedStateSet(self, child_id=CHILDID_SELF):
         states = []
         state = self.accState(child_id)
-        for shift in xrange(64):
+        for shift in range(64):
             state_bit = 1 << shift
             if state_bit & state:
                 states.append(self._getStateText(state_bit & state))
@@ -273,15 +272,15 @@ class ManagedChildAccessible(object):
                 getattr(self.parent, name), self.child_id)
         raise AttributeError
 
-    def __nonzero__(self):
+    def __bool__(self):
         return True
     
     def __str__(self):
         try:
-            return u'[%s | %s]' % (self.accRoleName(), 
+            return '[%s | %s]' % (self.accRoleName(), 
                                    self.accName() or '')
         except:
-            return u'[DEAD]'
+            return '[DEAD]'
 
     def __len__(self):
         return 0
